@@ -1,0 +1,55 @@
+ubuntu machine -> t2 medium
+Install Java and Jenkins
+Allow all traffic
+http://<EC2_PUBLIC _IP>:8080/
+cat /var/lib/jenkins/secrets/initialAdminPassword
+enter on jenkins web page n setup user n password
+Install all suggested plugins
+create a pipeline job
+
+Pipeline -> pipeline script from SCM -> Git -> add repo url -> select branch
+
+Manage Jenkins -> Plugins -> Available Plugins 
+
+Plugins for sonar/jfrog
+Sonar Gerrit
+SonarQube Scanner
+SonarQube Generic Coverage
+Sonar Quality Gates
+Quality Gates
+Artifactory
+Jfrog
+
+Install docker
+ docker run -d --name sonarqube -p 9000:9000 -p 9092:9092 sonarqube
+
+Login to sonarqube:
+user: admin, pass: admin
+http://54.210.159.120:9000
+
+Go to Administration -> My Account -> Security -> name -> Global Analysis Token -> Generate
+copy token
+
+Integrate sonar with jenkins
+sonarqube dashboard -> Administartion -> Configuration -> webhooks -> add url http://<EC2_IP>:8080/sonarqube-webhook/ and save
+
+Install Maven
+Install trivy docker image scan
+
+Integrate all tools with jenkins
+
+Manage Jenkins -> System -> Add Sonarqube -> Name -> Add server URL http://54.210.159.120:9000 -> Add token -> secret text -> save
+
+Add docker hub credentials -> manage jenkins -> system -> global credentials -> ID : docker -> username and password -> save
+
+Add Jenkins Shared library
+
+Manage Jenkins -> System -> Global Trusted Pipeline Libraries
+my-shared-library
+Default version – main
+Git - https://github.com/praveen1994dec/jenkins_shared_lib.git
+
+Run pipeline
+
+
+
