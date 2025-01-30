@@ -1,0 +1,89 @@
+Scenario 1:
+
+#Stage 1 build env
+FROM maven:3.8.4-openjdk-11-slim AS build
+
+#setup workdir
+WORKDIR /app
+
+#copy pom.xml to cache dependencies
+COPY pom.xml .
+
+#fetch dependencies
+RUN mvn dependency:go-offline
+
+#copy the source code and build application
+COPY src ./src
+RUN mvn clean package -DskipTests
+
+#Stage 2 Runtime env
+FROM tomcat:9.0.54-jdk11-openjdk-slim
+
+#Copy the build war file from build stage
+COPY --from=build /app/target/*.war /user/local/tomcat/webapps/
+
+#Expose the default tomcat port
+EXPOSE 8080
+
+#Start the tomcat server
+CMD ["catalina.sh", "run"]
+
+
+Scenario 2:
+
+FROM maven:3.8.4-openjdk-11-slim AS build
+
+#Steup working directory
+WORKDIR /app
+
+#Copy pom.xml to cache dependencies
+COPY pom.xml .
+
+#Fecth dependencies
+RUN mvn dependency:go-offline
+
+#Copy the source code and build application
+COPY src ./src
+RUN mvn clean package -DskipTests
+
+#Stage 2 Runtime env
+FROM tomcat:9.0.54-jdk11-openjdk-slim
+
+#create a group and add user
+RUN groupadd -r devops && useradd -r -g devops javauser
+
+#Setup working directory and change ownership to new user
+WORKDIR /usr/local/tomcat
+RUN chown -R javauser:devops /usr/local/tomcat
+
+#Switch to non-root user
+USER javauser
+
+#Copy build file from build stage to webapps
+COPY --from=build /app/target/*.war /usr/local/tomcat/webapps/
+
+#Expose port
+EXPOSE 8080
+
+#Start tomcat server
+CMD ["catalina.sh","run"]
+
+Scenario 3:
+
+#Use tomcat image
+FROM tomcat:9.0.54-jdk11-openjdk-slim
+
+#COpy war file to webapps
+COPY /target/kubernetes-configmap-reload-0.0.1-SNAPSHOT.jar /usr/local/tomcat/webapps/
+
+#Expose default tomcat port
+EXPOSE 8080
+
+#Healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD curl -f http://50.17.35.176:8080/ || exit 1
+
+#Start tomcat
+CMD ["catalina.sh","run"]
+
+
+
